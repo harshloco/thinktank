@@ -1,15 +1,21 @@
 // src/App.tsx
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { signInAnon, getCurrentUserId } from './services/firebase/auth';
-import LandingPage from './components/Landing/LandingPage';
-import Board from './components/Board/Board';
 import { RocketIcon, SparklesIcon } from 'lucide-react';
 import { DarkModeProvider } from './context/DarkModeContext';
-import PlanningPokerLanding from './components/Landing/PlanningPokerLanding';
-import PlanningPoker from './components/PlanningPoker';
-import UnifiedLanding from './components/Landing/UnifiedLanding';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
+
+// Lazy load components
+const UnifiedLanding = lazy(() => import('./components/Landing/UnifiedLanding'));
+const LandingPage = lazy(() => import('./components/Landing/LandingPage'));
+const Board = lazy(() => import('./components/Board/Board'));
+const PlanningPokerLanding = lazy(() => import('./components/Landing/PlanningPokerLanding'));
+const PlanningPoker = lazy(() => import('./components/PlanningPoker'));
+
+// Loading component
 const AuthLoader: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
@@ -37,6 +43,17 @@ const AuthLoader: React.FC = () => {
     </div>
   );
 };
+
+// Fallback loading component for Suspense
+const GlobalLoadingFallback: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="flex items-center space-x-2">
+      <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
+      <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+      <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse delay-300"></div>
+    </div>
+  </div>
+);
 
 const App: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(getCurrentUserId());
@@ -66,14 +83,18 @@ const App: React.FC = () => {
   return (
     <DarkModeProvider>
       <Router>
-        <Routes>
-        <Route path="/" element={<UnifiedLanding userId={userId!} />} />
-          <Route path="/boards" element={<LandingPage userId={userId!} />} />
-          <Route path="/board/:boardId" element={<Board />} />
-          <Route path="/poker" element={<PlanningPokerLanding userId={userId!} />} />
-          <Route path="/poker/:roomId" element={<PlanningPoker userId={userId!} />} />
-        </Routes>
+        <Suspense fallback={<GlobalLoadingFallback />}>
+          <Routes>
+            <Route path="/" element={<UnifiedLanding userId={userId!} />} />
+            <Route path="/boards" element={<LandingPage userId={userId!} />} />
+            <Route path="/board/:boardId" element={<Board />} />
+            <Route path="/poker" element={<PlanningPokerLanding userId={userId!} />} />
+            <Route path="/poker/:roomId" element={<PlanningPoker userId={userId!} />} />
+          </Routes>
+        </Suspense>
       </Router>
+      <Analytics/>
+      <SpeedInsights />
     </DarkModeProvider>
   );
 };

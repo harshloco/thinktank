@@ -9,11 +9,39 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import {
-  H2, H3, H5, H8, Hj, Hq, Hk,
-  D2, D3, D5, D8, Dj, Dq, Dk,
-  C2, C3, C5, C8, Cj, Cq, Ck,
-  S2, S3, S5, S8, Sj, Sq, Sk,
-  J2, B1, B2, Ha, Sa,
+  H2,
+  H3,
+  H5,
+  H8,
+  Hj,
+  Hq,
+  Hk,
+  D2,
+  D3,
+  D5,
+  D8,
+  Dj,
+  Dq,
+  Dk,
+  C2,
+  C3,
+  C5,
+  C8,
+  Cj,
+  Cq,
+  Ck,
+  S2,
+  S3,
+  S5,
+  S8,
+  Sj,
+  Sq,
+  Sk,
+  J2,
+  B1,
+  B2,
+  Ha,
+  Sa,
 } from "@letele/playing-cards";
 import { useDarkMode } from "../context/DarkModeContext";
 import {
@@ -22,7 +50,14 @@ import {
   ClockIcon,
   CrownIcon,
 } from "lucide-react";
-import { CardValue, PlayerData, StoryPoint, Suit, SuitType } from "../types/poker.types";
+import {
+  CardValue,
+  DEFAULT_STORY_POINTS,
+  PlayerData,
+  StoryPoint,
+  Suit,
+  SuitType,
+} from "../types/poker.types";
 
 // Types
 
@@ -47,7 +82,7 @@ interface CardProps {
 }
 
 interface StoryPointCardProps {
- point: StoryPoint;
+  point: StoryPoint;
   revealed?: boolean;
   selected?: boolean;
   onClick?: () => void;
@@ -67,10 +102,6 @@ interface PlayerCardProps {
   isDarkMode: boolean;
 }
 
-// Constants
-
-const DEFAULT_STORY_POINTS = [1, 2, 3, 5, 8, 13, "?"] as const;
-
 const CARD_MAPPING: Record<number | string, CardType | null> = {
   1: { suit: "S", value: "1" },
   2: { suit: "D", value: "2" },
@@ -83,16 +114,21 @@ const CARD_MAPPING: Record<number | string, CardType | null> = {
   "?": null,
 };
 
-const CARD_COMPONENTS: Record<Suit, Partial<Record<CardValue, React.ComponentType>>> = {
-  H: { a: Ha, '2': H2, '3': H3, '5': H5, '8': H8, j: Hj, q: Hq, k: Hk },
-  D: { '2': D2, '3': D3, '5': D5, '8': D8, j: Dj, q: Dq, k: Dk },
-  C: { '2': C2, '3': C3, '5': C5, '8': C8, j: Cj, q: Cq, k: Ck },
-  S: { '1': Sa, '2': S2, '3': S3, '5': S5, '8': S8, j: Sj, q: Sq, k: Sk }
+const CARD_COMPONENTS: Record<
+  Suit,
+  Partial<Record<CardValue, React.ComponentType>>
+> = {
+  H: { a: Ha, "2": H2, "3": H3, "5": H5, "8": H8, j: Hj, q: Hq, k: Hk },
+  D: { "2": D2, "3": D3, "5": D5, "8": D8, j: Dj, q: Dq, k: Dk },
+  C: { "2": C2, "3": C3, "5": C5, "8": C8, j: Cj, q: Cq, k: Ck },
+  S: { "1": Sa, "2": S2, "3": S3, "5": S5, "8": S8, j: Sj, q: Sq, k: Sk },
 };
 
 // Utilities
-const getCardComponent = (suit: Suit, value: CardValue): React.ComponentType | null => 
-  CARD_COMPONENTS[suit]?.[value] || null;
+const getCardComponent = (
+  suit: Suit,
+  value: CardValue
+): React.ComponentType | null => CARD_COMPONENTS[suit]?.[value] || null;
 
 const formatCardValue = (point: StoryPoint): string | number => {
   if (point === null) return "?";
@@ -112,7 +148,7 @@ const formatCardValue = (point: StoryPoint): string | number => {
   return STORY_POINT_MAPPING[point] || point;
 };
 
-const getTimeSinceJoined = (joinedAt: PlayerData['joinedAt']): string => {
+const getTimeSinceJoined = (joinedAt: PlayerData["joinedAt"]): string => {
   let timestamp: number;
 
   if (joinedAt instanceof Date) {
@@ -144,7 +180,9 @@ const BaseCard: React.FC<CardProps> = ({
     if (value === "?") return J2;
     const mapping = CARD_MAPPING[value];
     if (!mapping) return B1;
-    return getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1;
+    return (
+      getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1
+    );
   }, [value]);
 
   return (
@@ -208,11 +246,13 @@ export const StoryPointCardDeck: React.FC<StoryPointCardDeckProps> = ({
   const { isDarkMode } = useDarkMode();
 
   return (
-    <div className={`
+    <div
+      className={`
       grid grid-cols-5 gap-2 p-4 rounded-lg 
       ${isDarkMode ? "bg-gray-800" : "bg-white"}
       shadow-md max-w-xl mx-auto
-    `}>
+    `}
+    >
       {DEFAULT_STORY_POINTS.map((point) => (
         <StoryPointCard
           key={point}
@@ -233,13 +273,16 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   revealed,
   isDarkMode,
 }) => {
-  const canSeeVote = revealed || (data.currentUserId && data.userId === data.currentUserId);
+  const canSeeVote =
+    revealed || (data.currentUserId && data.userId === data.currentUserId);
 
   const CardComponent = React.useMemo(() => {
     if (data.vote === null) return B1;
     const mapping = CARD_MAPPING[data.vote];
     if (!mapping) return J2;
-    return getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1;
+    return (
+      getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1
+    );
   }, [data.vote]);
 
   return (
@@ -249,39 +292,68 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       transition={{ duration: 0.3 }}
       className={`
         flex items-center justify-between p-3
-        ${isDarkMode ? "bg-gray-700/50 hover:bg-gray-700/70" : "bg-gray-100 hover:bg-gray-200"}
+        ${
+          isDarkMode
+            ? "bg-gray-700/50 hover:bg-gray-700/70"
+            : "bg-gray-100 hover:bg-gray-200"
+        }
         transition-colors duration-200 group relative
       `}
     >
       {data.isOwner && (
         <CrownIcon
           size={16}
-          className={`absolute top-1 left-1 ${isDarkMode ? "text-yellow-400" : "text-yellow-500"} opacity-70`}
+          className={`absolute top-1 left-1 ${
+            isDarkMode ? "text-yellow-400" : "text-yellow-500"
+          } opacity-70`}
         />
       )}
 
       <div className="flex-grow flex items-center space-x-3">
         <div className="w-8 flex justify-center">
           {data.vote === null ? (
-            <CircleIcon size={20} className={isDarkMode ? "text-gray-500" : "text-gray-400"} />
+            <CircleIcon
+              size={20}
+              className={isDarkMode ? "text-gray-500" : "text-gray-400"}
+            />
           ) : canSeeVote ? (
-            <CheckCircle2Icon size={20} className={isDarkMode ? "text-green-400" : "text-green-600"} />
+            <CheckCircle2Icon
+              size={20}
+              className={isDarkMode ? "text-green-400" : "text-green-600"}
+            />
           ) : (
-            <ClockIcon size={20} className={`${isDarkMode ? "text-blue-400" : "text-blue-600"} animate-pulse`} />
+            <ClockIcon
+              size={20}
+              className={`${
+                isDarkMode ? "text-blue-400" : "text-blue-600"
+              } animate-pulse`}
+            />
           )}
         </div>
 
         <div>
-          <div className={`font-medium flex items-center ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+          <div
+            className={`font-medium flex items-center ${
+              isDarkMode ? "text-white" : "text-gray-800"
+            }`}
+          >
             {name}
           </div>
-          <div className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+          <div
+            className={`text-xs ${
+              isDarkMode ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
             Joined {getTimeSinceJoined(data.joinedAt)}
           </div>
         </div>
       </div>
 
-      <div className={`w-14 h-18 overflow-hidden ${revealed && data.vote === null ? "opacity-30" : ""} transition-opacity duration-300`}>
+      <div
+        className={`w-14 h-18 overflow-hidden ${
+          revealed && data.vote === null ? "opacity-30" : ""
+        } transition-opacity duration-300`}
+      >
         {canSeeVote ? (
           <div className="w-full h-full">
             <CardComponent style={{ width: "100%", height: "100%" }} />
@@ -300,73 +372,115 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
   votes,
   revealed,
   isDarkMode,
-}) => {
+ }) => {
   const voteStats = React.useMemo(() => {
-    const votesArray = Object.values(votes)
-      .filter((player): player is PlayerData & { vote: number } => 
-        player.vote !== null && typeof player.vote === "number")
-      .map(player => player.vote);
-
-      const voteGroups = Object.entries(votes).reduce<Record<string | number, string[]>>((acc, [name, player]) => {
-        if (player.vote !== null && typeof player.vote !== 'string') {
-          const vote = player.vote as number;
-          acc[vote] = [...(acc[vote] || []), name];
-        }
+    const votedPlayers = Object.values(votes).filter(
+      (player): player is PlayerData & { vote: number } =>
+        player.vote !== null && typeof player.vote === "number"
+    );
+ 
+    const voteGroups = votedPlayers.reduce<Record<number, string[]>>(
+      (acc, player) => {
+        acc[player.vote] = [...(acc[player.vote] || []), player.name];
         return acc;
-      }, {});
-
-    const voteCounts = votesArray.reduce<Record<number, number>>((acc, vote) => {
-      acc[vote] = (acc[vote] || 0) + 1;
-      return acc;
-    }, {});
-
+      },
+      {}
+    );
+ 
+    const voteCounts = votedPlayers.reduce<Record<number, number>>(
+      (acc, player) => {
+        acc[player.vote] = (acc[player.vote] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+ 
+    const totalVoted = votedPlayers.length;
+    const consensus = totalVoted > 0 ? 
+      Object.entries(voteCounts).find(([, count]) => count === totalVoted) : 
+      null;
+ 
     return {
       chartData: Object.entries(voteCounts)
         .map(([value, count]) => ({
           value: formatCardValue(Number(value)),
           count,
-          percentage: Math.round((count / votesArray.length) * 100),
+          percentage: Math.round((count / totalVoted) * 100),
           players: voteGroups[Number(value)] || [],
         }))
         .sort((a, b) => Number(a.value) - Number(b.value)),
-      consensus: Object.entries(voteCounts).reduce<{ value: string; count: number } | null>(
-        (prev, [value, count]) =>
-          count > (prev?.count || 0) ? { value, count } : prev,
-        null
-      ),
+      consensus: consensus ? { value: consensus[0], count: consensus[1] } : null,
+      totalVoters: Object.keys(votes).length,
+      totalVotes: totalVoted
     };
   }, [votes]);
-
+ 
   if (!revealed) return null;
-
+ 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-6 rounded-lg ${isDarkMode ? "bg-gray-800/50" : "bg-white"}`}
     >
-      <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+      <h3
+        className={`text-xl font-bold mb-4 ${
+          isDarkMode ? "text-white" : "text-gray-800"
+        }`}
+      >
         Voting Results
       </h3>
-
-      {voteStats.consensus && (
+ 
+      {voteStats.totalVotes === 0 ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className={`mb-6 p-4 rounded-lg ${
-            isDarkMode ? "bg-blue-900/30 text-blue-100" : "bg-blue-50 text-blue-800"
+            isDarkMode
+              ? "bg-yellow-900/30 text-yellow-100"
+              : "bg-yellow-50 text-yellow-800"
+          }`}
+        >
+          <div className="font-medium">No votes submitted</div>
+          <div className="text-sm opacity-80">
+            Waiting for players to vote
+          </div>
+        </motion.div>
+      ) : voteStats.consensus ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className={`mb-6 p-4 rounded-lg ${
+            isDarkMode
+              ? "bg-green-900/30 text-green-100"
+              : "bg-green-50 text-green-800"
           }`}
         >
           <div className="font-medium">
-            Consensus: {formatCardValue(Number(voteStats.consensus.value))} points
+            Unanimous Decision: {formatCardValue(Number(voteStats.consensus.value))}{" "}
+            points
           </div>
           <div className="text-sm opacity-80">
-            {voteStats.consensus.count} votes (
-            {Math.round((voteStats.consensus.count / Object.keys(votes).length) * 100)}% agreement)
+            All {voteStats.totalVotes} voting players agreed
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className={`mb-6 p-4 rounded-lg ${
+            isDarkMode
+              ? "bg-yellow-900/30 text-yellow-100"
+              : "bg-yellow-50 text-yellow-800"
+          }`}
+        >
+          <div className="font-medium">No Consensus</div>
+          <div className="text-sm opacity-80">
+            Voting players need to reach unanimous agreement
           </div>
         </motion.div>
       )}
-
+ 
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -379,6 +493,7 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
             />
             <YAxis stroke={isDarkMode ? "#9CA3AF" : "#4B5563"} />
             <Tooltip
+              cursor={false}
               content={({ payload, active }) => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload as {
@@ -388,10 +503,16 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
                     players: string[];
                   };
                   return (
-                    <div className={`p-3 rounded-lg shadow-lg ${
-                      isDarkMode ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-                    }`}>
-                      <div className="font-medium mb-1">{data.value} points</div>
+                    <div
+                      className={`p-3 rounded-lg shadow-lg ${
+                        isDarkMode
+                          ? "bg-gray-800 text-white"
+                          : "bg-white text-gray-900"
+                      }`}
+                    >
+                      <div className="font-medium mb-1">
+                        {data.value} points
+                      </div>
                       <div className="text-sm mb-2">
                         {data.count} votes ({data.percentage}%)
                       </div>
@@ -406,12 +527,13 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
               dataKey="count"
               fill={isDarkMode ? "#60A5FA" : "#3B82F6"}
               radius={[4, 4, 0, 0]}
+              isAnimationActive={false}
             />
           </BarChart>
         </ResponsiveContainer>
       </div>
     </motion.div>
   );
-};
+ };
 
 export default StoryPointCard;

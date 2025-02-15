@@ -9,7 +9,6 @@ import {
   PaletteIcon,
   SunIcon,
   MoonIcon, 
-  SquareAsterisk,
   LayoutDashboardIcon
 } from 'lucide-react';
 import { useDarkMode } from '../../context/DarkModeContext';
@@ -77,7 +76,8 @@ const LandingPage: React.FC<{ userId: string }> = ({ userId }) => {
               isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-700 hover:bg-gray-100'
             }`}
           >
-            <SquareAsterisk size={20} />
+            {/* <SquareAsterisk size={20} /> */}
+            StoryPoints
           </Link>
           <button
             onClick={toggleDarkMode}

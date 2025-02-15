@@ -8,7 +8,28 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  define: {
-    'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify(process.env.VITE_FIREBASE_API_KEY)
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // Split large libraries into separate chunks
+            if (id.includes('firebase') || id.includes('recharts') || id.includes('framer-motion')) {
+              return 'vendor';
+            }
+          }
+        }
+      }
+    },
+    chunkSizeWarningLimit: 500, // increase chunk size warning limit
+  },
+  server: {
+    proxy: {
+      '/recaptcha/api/siteverify': {
+        target: 'https://www.google.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/recaptcha/, '')
+      }
+    }
   }
 })

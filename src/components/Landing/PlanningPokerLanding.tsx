@@ -9,7 +9,6 @@ import {
   SparklesIcon, 
   SunIcon, 
   MoonIcon, 
-  SquareKanbanIcon as BoardIcon, 
   PaletteIcon 
 } from 'lucide-react';
 import { useDarkMode } from '../../context/DarkModeContext';
@@ -109,7 +108,8 @@ const PlanningPokerLanding: React.FC<PlanningPokerLandingProps> = ({ userId }) =
               isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-700 hover:bg-gray-100'
             }`}
           >
-            <BoardIcon size={20} />
+            {/* <BoardIcon size={20} /> */}
+            Boards
           </Link>
           <button
             onClick={toggleDarkMode}
