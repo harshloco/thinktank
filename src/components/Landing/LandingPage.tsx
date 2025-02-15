@@ -4,13 +4,13 @@ import { createBoard, getUserBoards } from '../../services/firebase/board';
 import { Board } from '../../types/board.types';
 import { 
   PlusIcon, 
-  SquareKanbanIcon as BoardIcon, 
   SparklesIcon, 
   RocketIcon, 
   PaletteIcon,
   SunIcon,
   MoonIcon, 
-  SquareAsterisk
+  SquareAsterisk,
+  LayoutDashboardIcon
 } from 'lucide-react';
 import { useDarkMode } from '../../context/DarkModeContext';
 import confetti from 'canvas-confetti';
@@ -121,7 +121,7 @@ const LandingPage: React.FC<{ userId: string }> = ({ userId }) => {
 
         <div className="animate-fade-in">
           <h2 className={`text-2xl font-semibold mb-4 flex items-center ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
-            <BoardIcon className="mr-3 text-purple-500" size={24} />
+            <LayoutDashboardIcon className="mr-3 text-purple-500" size={24} />
             My Boards
           </h2>
           

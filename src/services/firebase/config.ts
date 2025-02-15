@@ -1,8 +1,6 @@
 // src/services/firebase/config.ts
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAnalytics, isSupported } from 'firebase/analytics';
-
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_KEY,
@@ -16,4 +14,3 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-export const analytics = await isSupported() ? getAnalytics(app) : null;

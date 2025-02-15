@@ -1,39 +1,23 @@
 //PlanningPoker.tsx
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { doc, onSnapshot, updateDoc, DocumentData } from "firebase/firestore";
+import { doc, onSnapshot, Timestamp, updateDoc } from "firebase/firestore";
 import { db } from "../services/firebase/config";
 import { Users, Eye, RefreshCw, ChevronLeft, Sun, Moon } from "lucide-react";
 import { PlayerCard, StoryPointCard, VotingStats } from "./PokerCards";
 import { useDarkMode } from "../context/DarkModeContext";
-import { SuitType, SUITS } from "./PokerCards";
-import { Sq } from "@letele/playing-cards";
-// Type definitions
-type PlayerData = {
-  name: string;
-  userId: string;
-  vote: number | null;
-  suit: string | null;
-  joinedAt: Date;
-};
+import { PlayerData, StoryPoint, SuitType } from "../types/poker.types";
+
+
 
 type RoomData = {
   players: Record<string, PlayerData>;
   revealed: boolean;
   createdBy: string;
 };
-type Suit = "♠" | "♥" | "♦" | "♣";
 
-const STORY_POINTS = [1, 2, 3, 5, 8, 13, "?"];
+const STORY_POINTS: StoryPoint[] = [1, 2, 3, 5, 8, 13, "?"];
 
-// Consistent suit generation
-const getConsistentSuit = (value: number): SuitType => {
-  return SUITS[Math.floor((value * 13) % 4)];
-};
-
-// Memoized components for better performance
-const MemoizedPlayingCard = memo(PlayerCard);
-const MemoizedStoryPointCard = memo(StoryPointCard);
 
 // Memoized header component
 const Header = memo(
@@ -139,51 +123,6 @@ const Controls = memo(
   )
 );
 
-// Memoized player card component
-const PlayingCard = memo(
-  ({
-    name,
-    data,
-    revealed,
-    isDarkMode,
-  }: {
-    name: string;
-    data: PlayerData;
-    revealed: boolean;
-    isDarkMode: boolean;
-  }) => (
-    <div
-      className={`flex items-center justify-between p-4 rounded-lg ${
-        isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-      }`}
-    >
-      <div>
-        <div
-          className={`font-medium ${
-            isDarkMode ? "text-white" : "text-gray-800"
-          }`}
-        >
-          {name}
-        </div>
-        <div
-          className={`text-sm ${
-            isDarkMode ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
-          {data.vote !== null ? "✓ Voted" : "Not voted"}
-        </div>
-      </div>
-      <MemoizedPlayingCard
-        value={data.vote}
-        suit={data.suit}
-        revealed={revealed}
-        selected={false}
-        isDarkMode={isDarkMode}
-        className="shadow-md"
-      />
-    </div>
-  )
-);
 
 // Username Prompt Component
 const UserNamePrompt = ({
@@ -260,93 +199,78 @@ const UserNamePrompt = ({
 const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const [session, setSession] = useState<RoomData | null>(null);
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  
   const [players, setPlayers] = useState<Record<string, PlayerData>>({});
-  const [selectedPoint, setSelectedPoint] = useState<number | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<StoryPoint | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [joined, setJoined] = useState(false);
+  const [selectedSuit, setSelectedSuit] = useState<SuitType | null>(null);
+  
   const storedName = localStorage.getItem("userName");
-  const [selectedSuit, setSelectedSuit] = useState<Suit | null>(null);
 
-  // Memoized join session function
-  const joinSession = useCallback(
-    async (name: string) => {
-      if (!name.trim() || !userId || !roomId) return;
+  const joinSession = useCallback(async (name: string) => {
+    if (!name.trim() || !userId || !roomId) return;
 
-      const roomRef = doc(db, "planningPoker", roomId);
-      const playerData: PlayerData = {
-        name: name,
-        userId: userId,
-        vote: null,
-        suit: null,
-        joinedAt: new Date(),
-      };
+    const roomRef = doc(db, "planningPoker", roomId);
+    const playerData: PlayerData = {
+      name,
+      userId,
+      vote: null,
+      suit: null,
+      joinedAt: Timestamp.now(),
+      isOwner: false,
+    };
 
-      try {
-        await updateDoc(roomRef, {
-          [`players.${name}`]: playerData,
-        });
-        setJoined(true);
-      } catch (error) {
-        console.error("Error joining session:", error);
-        setJoined(false);
-      }
-    },
-    [userId, roomId]
-  );
+    try {
+      await updateDoc(roomRef, {
+        [`players.${name}`]: playerData,
+      });
+      setJoined(true);
+    } catch (error) {
+      console.error("Error joining session:", error);
+      setJoined(false);
+    }
+  }, [userId, roomId]);
 
-  // Auto-join if we have a stored name
   useEffect(() => {
     if (storedName && !joined && roomId) {
       joinSession(storedName);
     }
   }, [roomId, storedName, joined, joinSession]);
 
-  // Memoized vote function with optimistic update
-  const vote = useCallback(
-    async (points: number) => {
-      if (!storedName || !roomId || revealed) return;
-
-      const suit = getConsistentSuit(points);
-      const roomRef = doc(db, "planningPoker", roomId);
-      setSelectedSuit(suit);
-
-      // Optimistic update
-      setSelectedPoint(points);
-      setPlayers((prev) => ({
-        ...prev,
-        [storedName]: {
-          ...prev[storedName],
+  const vote = useCallback(async (points: StoryPoint) => {
+    if (!storedName || !roomId || revealed) return;
+  
+    const roomRef = doc(db, "planningPoker", roomId);
+    const suit = getRandomSuit(); // Add this helper function
+    
+    try {
+      await updateDoc(roomRef, {
+        [`players.${storedName}`]: {
+          ...players[storedName],
           vote: points,
-          suit: suit,
-        },
-      }));
+          suit
+        }
+      });
+      
+      setSelectedPoint(points);
+      setSelectedSuit(suit);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error voting:', error);
+      return { success: false, error: 'Failed to submit vote' };
+    }
+  }, [roomId, storedName, revealed, players]);
+  
+  // Helper function
+  const getRandomSuit = (): SuitType => {
+    const suits: SuitType[] = ["spades", "hearts", "diamonds", "clubs"];
+    return suits[Math.floor(Math.random() * suits.length)];
+  };
 
-      try {
-        await updateDoc(roomRef, {
-          [`players.${storedName}.vote`]: points,
-          [`players.${storedName}.suit`]: suit,
-        });
-      } catch (error) {
-        console.error("Error voting:", error);
-        // Rollback optimistic update on error
-        setSelectedPoint(null);
-        setPlayers((prev) => {
-          const updatedPlayers = { ...prev };
-          if (updatedPlayers[storedName]) {
-            updatedPlayers[storedName].vote = null;
-            updatedPlayers[storedName].suit = null;
-          }
-          return updatedPlayers;
-        });
-      }
-    },
-    [roomId, storedName, revealed]
-  );
-
-  // Effect for room subscription with error handling
   useEffect(() => {
     if (!roomId || !userId) return;
 
@@ -359,12 +283,11 @@ const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
         (docSnap) => {
           if (docSnap.exists()) {
             const roomData = docSnap.data() as RoomData;
-            setSession(roomData);
+           
             setPlayers(roomData?.players || {});
             setRevealed(roomData?.revealed || false);
             setIsOwner(roomData?.createdBy === userId);
 
-            // Sync selected point with server state
             if (storedName && roomData?.players?.[storedName]) {
               setSelectedPoint(roomData.players[storedName].vote);
             }
@@ -381,12 +304,10 @@ const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
     return () => unsubscribe?.();
   }, [roomId, userId, storedName]);
 
-  // Memoized handlers
   const handleReveal = useCallback(async () => {
     if (!isOwner || !roomId) return;
-    const roomRef = doc(db, "planningPoker", roomId);
     try {
-      await updateDoc(roomRef, { revealed: true });
+      await updateDoc(doc(db, "planningPoker", roomId), { revealed: true });
     } catch (error) {
       console.error("Error revealing votes:", error);
     }
@@ -394,15 +315,16 @@ const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
 
   const handleReset = useCallback(async () => {
     if (!isOwner || !roomId) return;
-    const roomRef = doc(db, "planningPoker", roomId);
-    const resetPlayers = Object.keys(players).reduce((acc, key) => {
-      acc[key] = { ...players[key], vote: null, suit: null };
-      return acc;
-    }, {} as Record<string, PlayerData>);
+    const resetPlayers = Object.fromEntries(
+      Object.entries(players).map(([key, player]) => [
+        key,
+        { ...player, vote: null, suit: null }
+      ])
+    );
 
     try {
       setSelectedPoint(null);
-      await updateDoc(roomRef, {
+      await updateDoc(doc(db, "planningPoker", roomId), {
         players: resetPlayers,
         revealed: false,
       });
@@ -411,35 +333,29 @@ const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
     }
   }, [isOwner, roomId, players]);
 
-  // If no room ID or stored name, prompt for username
   if (!roomId) {
     return (
-      <div
-        className={`min-h-screen flex items-center justify-center p-4 ${
-          isDarkMode ? "bg-gray-900 text-white" : "bg-gray-50"
-        }`}
-      >
+      <div className={`min-h-screen flex items-center justify-center p-4 ${
+        isDarkMode ? "bg-gray-900 text-white" : "bg-gray-50"
+      }`}>
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
       </div>
     );
   }
 
-  // If no stored name, show username prompt
   if (!storedName) {
     return (
       <UserNamePrompt
-        onSubmit={(name) => joinSession(name)}
+        onSubmit={joinSession}
         isDarkMode={isDarkMode}
       />
     );
   }
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${
-        isDarkMode ? "bg-gray-900 text-white" : "bg-gray-50"
-      }`}
-    >
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode ? "bg-gray-900 text-white" : "bg-gray-50"
+    }`}>
       <div className="container mx-auto max-w-7xl px-4 py-6">
         <Header
           navigate={navigate}
@@ -457,11 +373,9 @@ const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
         />
 
         {revealed && (
-          <div
-            className={`mt-6 rounded-lg p-4 ${
-              isDarkMode ? "bg-gray-800/50" : "bg-white"
-            }`}
-          >
+          <div className={`mt-6 rounded-lg p-4 ${
+            isDarkMode ? "bg-gray-800/50" : "bg-white"
+          }`}>
             <VotingStats
               votes={players}
               revealed={revealed}
@@ -471,38 +385,30 @@ const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
         )}
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Story Points Grid */}
-          <div className="max-w-5xl w-full ">
-            <div className="w-full ">
-              <div
-                className={`rounded-lg p-6 ${
-                  isDarkMode ? "bg-gray-800/50" : "bg-white"
-                }`}
-              >
-                <h2 className="text-xl font-bold mb-6">Story Points</h2>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6">
-                  {STORY_POINTS.map((point) => (
-                    <StoryPointCard
-                      key={point}
-                      point={point}
-                      selected={selectedPoint === point}
-                      onClick={() => vote(point)}
-                      disabled={revealed}
-                      isDarkMode={isDarkMode}
-                    />
-                  ))}
-                </div>
+          <div className="max-w-5xl w-full">
+            <div className={`rounded-lg p-6 ${
+              isDarkMode ? "bg-gray-800/50" : "bg-white"
+            }`}>
+              <h2 className="text-xl font-bold mb-6">Story Points</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6">
+                {STORY_POINTS.map((point) => (
+                  <StoryPointCard
+                    key={point}
+                    point={point}
+                    selected={selectedPoint === point}
+                    onClick={() => typeof point === 'number' && vote(point)}
+                    disabled={revealed}
+                   
+                  />
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Players List */}
           <div className="w-full lg:w-2/4">
-            <div
-              className={`sticky top-4 rounded-lg p-4 ${
-                isDarkMode ? "bg-gray-800/50" : "bg-white"
-              }`}
-            >
+            <div className={`sticky top-4 rounded-lg p-4 ${
+              isDarkMode ? "bg-gray-800/50" : "bg-white"
+            }`}>
               <h2 className="text-xl font-bold mb-4">
                 Players ({Object.keys(players).length})
               </h2>

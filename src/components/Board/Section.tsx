@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { EditIcon, XIcon } from "lucide-react";
 import Note from "./Note";
@@ -9,7 +8,7 @@ import {
   updateNote as updateNoteService,
 } from "../../services/firebase/board";
 import { Section as SectionType } from "../../types/board.types";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SectionProps {
   section: SectionType;
@@ -176,90 +175,113 @@ export default function Section({
       <div>
         {/* Notes List */}
         <div className="space-y-4 mb-4">
-        <AnimatePresence>
-          {section.notes.map((note) =>
-            editingNoteId === note.id ? (
-              <textarea
-                ref={(input) => {
-                  input && input.focus();
+          <AnimatePresence>
+            {section.notes.map((note) =>
+              editingNoteId === note.id ? (
+                <motion.div
+                  key={note.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <textarea
+                    ref={(input) => {
+                      if (!input) return;
 
-                  // Add click-outside handler
-                  const handleClickOutside = (e: MouseEvent) => {
-                    if (input && !input.contains(e.target as Node)) {
-                      handleUpdateNote(undefined, true);
-                      document.removeEventListener(
-                        "mousedown",
-                        handleClickOutside
-                      );
-                    }
-                  };
+                      // Focus the input
+                      input.focus();
 
-                  // Add listener after a short timeout to prevent immediate trigger
-                  setTimeout(() => {
-                    document.addEventListener("mousedown", handleClickOutside);
-                  }, 0);
-                }}
-                key={note.id}
-                value={editNoteContent}
-                onChange={(e) => setEditNoteContent(e.target.value)}
-                onKeyDown={(e) => {
-                  // Prevent editing when Esc is pressed
-                  if (e.key === "Escape") {
-                    setEditingNoteId(null);
-                    setEditNoteContent("");
-                  }
-                  handleUpdateNote(e);
-                }}
-                className={`w-full p-2 border rounded ${
-                  isDark
-                    ? "bg-gray-700 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                }`}
-                rows={3}
-              />
-            ) : (
-              <Note
-                key={note.id}
-                note={note}
-                boardId={boardId}
-                sectionId={section.id}
-                userId={userId}
-                isAuthor={note.authorId === userId}
-                isDark={isDark}
-                isBoardVisible={isBoardVisible}
-                onVote={(noteId, voteType) => {
-                  // Prevent editing when voting
-                  handleVote(noteId, voteType);
-                }}
-                onDelete={handleDeleteNote}
-                onNoteClick={() => {
-                  setEditingNoteId(note.id);
-                  setEditNoteContent(note.content);
-                }}
-              />
-            )
-          )}
+                      // Add click-outside handler
+                      const handleClickOutside = (e: MouseEvent) => {
+                        if (!input.contains(e.target as Node)) {
+                          handleUpdateNote(undefined, true);
+                          document.removeEventListener(
+                            "mousedown",
+                            handleClickOutside
+                          );
+                        }
+                      };
+
+                      // Add listener after a short timeout to prevent immediate trigger
+                      const timeoutId = setTimeout(() => {
+                        document.addEventListener(
+                          "mousedown",
+                          handleClickOutside
+                        );
+                      }, 0);
+
+                      // Return a cleanup function
+                      return () => {
+                        document.removeEventListener(
+                          "mousedown",
+                          handleClickOutside
+                        );
+                        clearTimeout(timeoutId);
+                      };
+                    }}
+                    value={editNoteContent}
+                    onChange={(e) => setEditNoteContent(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Prevent editing when Esc is pressed
+                      if (e.key === "Escape") {
+                        setEditingNoteId(null);
+                        setEditNoteContent("");
+                        return;
+                      }
+                      handleUpdateNote(e);
+                    }}
+                    className={`w-full p-2 border rounded ${
+                      isDark
+                        ? "bg-gray-700 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-gray-900"
+                    }`}
+                    rows={3}
+                  />
+                </motion.div>
+              ) : (
+                <Note
+                  key={note.id}
+                  note={note}
+                  boardId={boardId}
+                  sectionId={section.id}
+                  userId={userId}
+                  isAuthor={note.authorId === userId}
+                  isDark={isDark}
+                  isBoardVisible={isBoardVisible}
+                  onVote={(noteId, voteType) => {
+                    // Prevent editing when voting
+                    handleVote(noteId, voteType);
+                  }}
+                  onDelete={handleDeleteNote}
+                  onNoteClick={() => {
+                    setEditingNoteId(note.id);
+                    setEditNoteContent(note.content);
+                  }}
+                />
+              )
+            )}
           </AnimatePresence>
         </div>
 
         {/* Add Note Textarea */}
         <motion.textarea
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        value={newNoteContent}
-        onChange={(e) => setNewNoteContent(e.target.value)}
-        onKeyDown={handleAddNote}
-        placeholder="Type a note and press Enter to add..."
-        className={`w-full p-3 border rounded-lg
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          value={newNoteContent}
+          onChange={(e) => setNewNoteContent(e.target.value)}
+          onKeyDown={handleAddNote}
+          placeholder="Type a note and press Enter to add..."
+          className={`w-full p-3 border rounded-lg
           transition-all duration-300 
           focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-          ${isDark 
-            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+          ${
+            isDark
+              ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
           }`}
-        rows={3}
-      />
+          rows={3}
+        />
       </div>
     </div>
   );

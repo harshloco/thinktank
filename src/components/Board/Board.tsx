@@ -27,7 +27,6 @@ const Board: React.FC = () => {
   const [board, setBoard] = useState<BoardType | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [newSectionTitle, setNewSectionTitle] = useState("");
-  const [ setEditingSectionId] = useState<string | null>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   useEffect(() => {
@@ -189,7 +188,7 @@ const Board: React.FC = () => {
               key={section.id}
               section={section}
               isBoardVisible={isBoardVisible}
-              boardId={boardId}
+              boardId={boardId??''}
               userId={userId}
               isDark={isDarkMode}
               isCreator={isCreator}

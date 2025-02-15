@@ -13,45 +13,21 @@ import { db } from "./config";
 import { Board, Section, NoteStatus, Note } from "../../types/board.types";
 import { v4 as uuidv4 } from "uuid";
 
-// export const getUserBoards = async (userId: string): Promise<Board[]> => {
-//   try {
-//     // Query boards where the user is the creator
-//     const boardsQuery = query(
-//       collection(db, "boards"),
-//       where("creatorId", "==", userId)
-//     );
-
-//     const querySnapshot = await getDocs(boardsQuery);
-
-//     return querySnapshot.docs.map(
-//       (doc) =>
-//         ({
-//           id: doc.id,
-//           ...doc.data(),
-//         } as Board)
-//     );
-//   } catch (error) {
-//     console.error("Error fetching user boards:", error);
-//     throw error;
-//   }
-// };
-
-
-export const getUserBoards = async (userId: string) => {
+export const getUserBoards = async (userId: string): Promise<Board[]> => {
   const boardsRef = collection(db, 'boards');
   const boardsSnapshot = await getDocs(boardsRef);
   
-  const boards = [];
+  const boards: Board[] = [];
   
   for (const doc of boardsSnapshot.docs) {
-    const boardData = doc.data();
+    const boardData = doc.data() as Board;
     const sections = boardData.sections || [];
     
     // Get unique member IDs from notes
-    const memberIds = new Set();
+    const memberIds = new Set<string>();
     let hasUserNote = false;
     
-    sections.forEach((section: { notes: Note[]; }) => {
+    sections.forEach((section) => {
       section.notes?.forEach(note => {
         memberIds.add(note.authorId);
         if (note.authorId === userId) {
@@ -63,7 +39,7 @@ export const getUserBoards = async (userId: string) => {
     // Only include boards where user is creator or has notes
     if (boardData.creatorId === userId || hasUserNote) {
       boards.push({
-        id: doc.id,
+      
         ...boardData,
         memberCount: memberIds.size,
         hasUserNote

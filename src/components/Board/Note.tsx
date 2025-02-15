@@ -54,16 +54,12 @@ export default function Note({
 
   // Count votes
   const upvotes = votes.filter((vote) => vote.type === "up").length;
-  const downvotes = votes.filter((vote) => vote.type === "down").length;
-  const netVotes = upvotes - downvotes;
 
   // Check if current user has voted
   const userUpvoted = votes.some(
     (vote) => vote.userId === userId && vote.type === "up"
   );
-  const userDownvoted = votes.some(
-    (vote) => vote.userId === userId && vote.type === "down"
-  );
+
 
   // Format timestamp
   const formattedTime = formatDistanceToNow(note.createdAt.toDate(), {
