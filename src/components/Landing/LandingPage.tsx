@@ -9,7 +9,8 @@ import {
   RocketIcon, 
   PaletteIcon,
   SunIcon,
-  MoonIcon 
+  MoonIcon, 
+  SquareAsterisk
 } from 'lucide-react';
 import { useDarkMode } from '../../context/DarkModeContext';
 import confetti from 'canvas-confetti';
@@ -69,7 +70,15 @@ const LandingPage: React.FC<{ userId: string }> = ({ userId }) => {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-purple-50'} p-6 transition-colors duration-300`}>
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-end mb-4">
+      <div className="flex justify-end space-x-2 mb-4">
+          <Link 
+            to="/poker" 
+            className={`p-2 rounded-full transition-colors ${
+              isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <SquareAsterisk size={20} />
+          </Link>
           <button
             onClick={toggleDarkMode}
             className={`p-2 rounded-full transition-colors ${

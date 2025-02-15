@@ -46,3 +46,13 @@ export interface Board {
   }
 
   
+  export interface PlanningPokerSession {
+    players: {
+      [playerName: string]: {
+        name: string;
+        vote: number | null;
+        joinedAt: Date;
+      }
+    };
+    revealed: boolean;
+  }

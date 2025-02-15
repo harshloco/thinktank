@@ -130,7 +130,7 @@ const Board: React.FC = () => {
           <div>
             <nav className="flex items-center mb-2 text-sm font-medium">
               <Link
-                to="/"
+                to="/boards"
                 className={`flex items-center hover:text-indigo-600 transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
               >
                 <HomeIcon size={16} className="mr-2" />

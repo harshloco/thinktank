@@ -6,6 +6,9 @@ import LandingPage from './components/Landing/LandingPage';
 import Board from './components/Board/Board';
 import { RocketIcon, SparklesIcon } from 'lucide-react';
 import { DarkModeProvider } from './context/DarkModeContext';
+import PlanningPokerLanding from './components/Landing/PlanningPokerLanding';
+import PlanningPoker from './components/PlanningPoker';
+import UnifiedLanding from './components/Landing/UnifiedLanding';
 
 const AuthLoader: React.FC = () => {
   return (
@@ -64,8 +67,11 @@ const App: React.FC = () => {
     <DarkModeProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<LandingPage userId={userId!} />} />
+        <Route path="/" element={<UnifiedLanding userId={userId!} />} />
+          <Route path="/boards" element={<LandingPage userId={userId!} />} />
           <Route path="/board/:boardId" element={<Board />} />
+          <Route path="/poker" element={<PlanningPokerLanding userId={userId!} />} />
+          <Route path="/poker/:roomId" element={<PlanningPoker userId={userId!} />} />
         </Routes>
       </Router>
     </DarkModeProvider>
