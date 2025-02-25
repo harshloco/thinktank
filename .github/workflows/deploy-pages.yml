@@ -1,0 +1,22 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main] # or your default branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Replace Analytics ID
+        run: |
+          find . -name "*.html" -type f -exec sed -i "s/PLACEHOLDER_ANALYTICS_ID/${{ secrets.GA_MEASUREMENT_ID }}/g" {} \;
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: . # The folder containing your site files
+          branch: main # The branch to deploy to
