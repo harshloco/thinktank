@@ -13,7 +13,7 @@ jobs:
 
       - name: Replace Analytics ID
         run: |
-          find . -name "*.html" -type f -exec sed -i "s/PLACEHOLDER_ANALYTICS_ID/${{ secrets.GA_MEASUREMENT_ID }}/g" {} \;
+          find . -name "*.html" -type f -exec sed -i "s/GOOGLE_ANALYTICS_ID/${{ secrets.GA_MEASUREMENT_ID }}/g" {} \;
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
