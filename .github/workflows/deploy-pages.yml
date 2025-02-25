@@ -4,6 +4,9 @@ on:
   push:
     branches: [main] # or your default branch
 
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -19,4 +22,5 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: . # The folder containing your site files
-          branch: main # The branch to deploy to
+          branch: gh-pages # The branch to deploy to
+          clean: true
