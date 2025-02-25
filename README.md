@@ -1,50 +1,132 @@
-# React + TypeScript + Vite
+# ThinkTank - Planning Poker & Retrospective Boards
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<div align="center">
+  <img src="./public/favicon.svg" alt="ThinkTank Logo" width="20"/>
+  <p><strong>Enhance team collaboration with powerful tools for retrospectives and planning</strong></p>
+  <p>
+    <a href="https://thinktank-app.vercel.app">View Demo</a>
+    ·
+    <a href="#features">Features</a>
+    ·
+    <a href="#getting-started">Getting Started</a>
+    ·
+    <a href="#installation">Installation</a>
+  </p>
+</div>![alt text](image.png)
 
-Currently, two official plugins are available:
+## About ThinkTank
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+ThinkTank is a modern collaboration platform for agile teams, offering essential tools to run effective meetings, plan sprints, and conduct retrospectives. With ThinkTank, remote teams can collaborate in real-time using Planning Poker for estimation and Retrospective Boards for team reflection.
 
-## Expanding the ESLint configuration
+<div align="center">
+  <img src="./public/screenshot.png" alt="ThinkTank Screenshot" width="900"/>
+</div>
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Features
 
-- Configure the top-level `parserOptions` property like this:
+### 🎮 Planning Poker
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- **Anonymous Voting**: Prevent anchoring bias by keeping votes hidden until reveal
+- **Real-time Collaboration**: Instantly see when team members cast their votes
+- **Voting Statistics**: View result distribution and consensus details
+- **Custom Voting Scales**: Standard Fibonacci sequence (1, 2, 3, 5, 8, 13...)
+
+### 📋 Retrospective Boards
+
+- **Customizable Sections**: "What went well", "What to improve", and more
+- **Real-time Updates**: Collaborative editing with instant synchronization
+- **Drag and Drop**: Organize and prioritize feedback
+- **Action Item Tracking**: Convert feedback into actionable tasks
+
+### 🚀 General Features
+
+- **No Account Required**: Get started in seconds
+- **Shareable URLs**: Generate unique room links to invite team members
+- **Dark Mode**: Toggle between light and dark themes
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Firebase Backend**: Reliable real-time database with Firestore
+
+## Technologies Used
+
+- **Frontend**: React.js, TypeScript, Tailwind CSS
+- **Backend**: Firebase (Firestore)
+- **State Management**: React Context API
+- **Deployment**: Vercel
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 16+
+- npm or yarn
+- Firebase account (free tier works)
+
+### Installation
+
+1. Clone the repository
+
+   ```bash
+   git clone https://github.com/harshloco/thinktank.git
+   cd thinktank
+   ```
+
+2. Install dependencies
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Set up environment variables
+   Create a `.env.local` file in the root directory with your Firebase configuration:
+
+   ```
+   VITE_FIREBASE_API_KEY=your-api-key
+   VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+   VITE_FIREBASE_APP_ID=your-app-id
+   ```
+
+4. Start the development server
+
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. Open [http://localhost:5173](http://localhost:5173) to view the app in your browser
+
+## Deployment
+
+The application is deployed using Vercel. Any push to the main branch will trigger a new deployment.
+
+To deploy manually:
+
+```bash
+npm run build
+# then deploy using your preferred hosting service
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Contributing
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+Harshpreet Singh- [singh.harshpreet@outlook.com](mailto:singh.harshpreet@outlook.com)
+
+Project Link: [https://github.com/harshloco/thinktank](https://github.com/harshloco/thinktank)
