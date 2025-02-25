@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart,
@@ -42,13 +42,17 @@ import {
   B2,
   Ha,
   Sa,
+  H10,
+  C10
 } from "@letele/playing-cards";
 import { useDarkMode } from "../context/DarkModeContext";
 import {
-  CheckCircle2Icon,
-  CircleIcon,
-  ClockIcon,
-  CrownIcon,
+  Check,
+  CheckCircle2,
+  Circle,
+  Crown,
+  PenSquare,
+  X,
 } from "lucide-react";
 import {
   CardValue,
@@ -58,6 +62,8 @@ import {
   Suit,
   SuitType,
 } from "../types/poker.types";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../services/firebase/config";
 
 // Types
 
@@ -79,6 +85,7 @@ interface CardProps {
   selected?: boolean;
   isDarkMode?: boolean;
   className?: string;
+  loading?: boolean;
 }
 
 interface StoryPointCardProps {
@@ -87,6 +94,7 @@ interface StoryPointCardProps {
   selected?: boolean;
   onClick?: () => void;
   disabled?: boolean;
+  loading?: boolean;
 }
 
 interface StoryPointCardDeckProps {
@@ -100,6 +108,7 @@ interface PlayerCardProps {
   data: PlayerData;
   revealed: boolean;
   isDarkMode: boolean;
+  roomId:string;
 }
 
 const CARD_MAPPING: Record<number | string, CardType | null> = {
@@ -108,9 +117,9 @@ const CARD_MAPPING: Record<number | string, CardType | null> = {
   3: { suit: "C", value: "3" },
   5: { suit: "S", value: "5" },
   8: { suit: "H", value: "8" },
-  13: { suit: "D", value: "j" },
-  21: { suit: "C", value: "q" },
-  34: { suit: "S", value: "k" },
+  10: { suit: "C", value: "10" },
+  11: { suit: "S", value: "j" },
+  13: { suit: "D", value: "k" },
   "?": null,
 };
 
@@ -118,9 +127,9 @@ const CARD_COMPONENTS: Record<
   Suit,
   Partial<Record<CardValue, React.ComponentType>>
 > = {
-  H: { a: Ha, "2": H2, "3": H3, "5": H5, "8": H8, j: Hj, q: Hq, k: Hk },
+  H: { a: Ha, "2": H2, "3": H3, "5": H5, "8": H8, "10": H10, j: Hj, q: Hq, k: Hk },
   D: { "2": D2, "3": D3, "5": D5, "8": D8, j: Dj, q: Dq, k: Dk },
-  C: { "2": C2, "3": C3, "5": C5, "8": C8, j: Cj, q: Cq, k: Ck },
+  C: { "2": C2, "3": C3, "5": C5, "8": C8, "10": C10, j: Cj, q: Cq, k: Ck },
   S: { "1": Sa, "2": S2, "3": S3, "5": S5, "8": S8, j: Sj, q: Sq, k: Sk },
 };
 
@@ -139,7 +148,9 @@ const formatCardValue = (point: StoryPoint): string | number => {
     3: 3,
     5: 5,
     8: 8,
-    13: "j",
+    10: 10,
+    11: "j",
+    13: "k",
     21: "q",
     34: "k",
     "?": "j2",
@@ -175,7 +186,10 @@ const BaseCard: React.FC<CardProps> = ({
   revealed = true,
   selected = false,
   className = "",
+  loading = false
 }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const CardComponent = React.useMemo(() => {
     if (value === "?") return J2;
     const mapping = CARD_MAPPING[value];
@@ -185,25 +199,89 @@ const BaseCard: React.FC<CardProps> = ({
     );
   }, [value]);
 
+   // Simulate loading completion after components are ready
+   useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 300); // Small delay to ensure smooth transition
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+    // Calculate what to show based on loading and reveal state
+    const showCardBack = loading || !isLoaded || !revealed;
+  
+     // Disable the 3D flip animation during loading to avoid Safari issues
+  const animations = !loading && isLoaded ? {
+    initial: { opacity: 0, rotateY: 180 },
+    animate: { opacity: 1, rotateY: 0 },
+    exit: { opacity: 0, rotateY: 180 },
+    transition: { type: "spring", stiffness: 300 }
+  } : {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    transition: { duration: 0.3 }
+  };
+  
   return (
     <motion.div
-      initial={{ opacity: 0, rotateY: 180 }}
-      animate={{ opacity: 1, rotateY: 0 }}
-      exit={{ opacity: 0, rotateY: 180 }}
-      transition={{ type: "spring", stiffness: 300 }}
+      {...animations}
       className={`
-        relative w-full h-full transform-gpu transition-all duration-300
+        relative w-full h-full transition-all duration-300
         ${selected ? "ring-2 ring-blue-500 scale-105" : ""}
         overflow-hidden
         ${className}
+        -webkit-backface-visibility: ${isLoaded ? 'hidden' : 'visible'};
+        -webkit-transform-style: ${isLoaded ? 'preserve-3d' : 'flat'};
+        -webkit-perspective: 1000;
+        transform-style: ${isLoaded ? 'preserve-3d' : 'flat'};
+        backface-visibility: ${isLoaded ? 'hidden' : 'visible'};
       `}
+      style={{
+        WebkitTransformStyle: isLoaded ? "preserve-3d" : "flat",
+        WebkitBackfaceVisibility: isLoaded ? "hidden" : "visible"
+      }}
     >
-      {!revealed ? (
-        <B1 style={{ width: "100%", height: "100%" }} />
-      ) : (
-        <CardComponent style={{ width: "100%", height: "100%" }} />
-      )}
+      <div className="w-full h-full relative z-0">
+        {showCardBack ? (
+          <div className="w-full h-full">
+            <B2 style={{ width: "100%", height: "100%", display: "block" }} />
+            {/* {loading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-md">
+                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )} */}
+          </div>
+        ) : (
+          <CardComponent style={{ width: "100%", height: "100%", display: "block" }} />
+        )}
+      </div>
     </motion.div>
+  );
+};
+
+export const StoryPointCardsGrid: React.FC<{
+  points: StoryPoint[];
+  selectedPoint: StoryPoint | null;
+  onSelect: (point: number) => void;
+  disabled: boolean;
+  loading: boolean;
+}> = ({ points, selectedPoint, onSelect, disabled, loading }) => {
+ 
+  // Show proper number of loading cards during loading state
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6">
+      {points.map((point) => (
+        <StoryPointCard
+          key={point}
+          point={point}
+          selected={selectedPoint === point}
+          onClick={() => typeof point === 'number' && onSelect(point)}
+          disabled={disabled}
+          loading={loading}
+        />
+      ))}
+    </div>
   );
 };
 
@@ -213,27 +291,36 @@ export const StoryPointCard: React.FC<StoryPointCardProps> = ({
   selected = false,
   onClick,
   disabled = false,
+  loading = false
 }) => {
   const { isDarkMode } = useDarkMode();
 
   return (
     <motion.button
-      whileHover={disabled ? {} : { scale: 1.05 }}
-      whileTap={disabled ? {} : { scale: 0.95 }}
-      onClick={onClick}
-      disabled={disabled}
+      whileHover={disabled || loading ? {} : { scale: 1.05 }}
+      whileTap={disabled || loading ? {} : { scale: 0.95 }}
+      onClick={loading ? undefined : onClick}
+      disabled={disabled || loading}
       className={`
         relative w-full max-w-[120px] aspect-[3/4]
-        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+        ${(disabled || loading) ? "opacity-80 cursor-not-allowed" : "cursor-pointer"}
         ${selected ? "z-10" : ""}
+        overflow-visible
       `}
+      style={{
+        WebkitTransformStyle: "preserve-3d",
+        WebkitBackfaceVisibility: "hidden",
+      }}
     >
-      <BaseCard
-        value={point}
-        revealed={revealed}
-        selected={selected}
-        isDarkMode={isDarkMode}
-      />
+      <div className="w-full h-full relative">
+        <BaseCard
+          value={point}
+          revealed={revealed}
+          selected={selected}
+          isDarkMode={isDarkMode}
+          loading={loading}
+        />
+      </div>
     </motion.button>
   );
 };
@@ -267,23 +354,158 @@ export const StoryPointCardDeck: React.FC<StoryPointCardDeckProps> = ({
   );
 };
 
+// export const PlayerCard: React.FC<PlayerCardProps> = ({
+//   name,
+//   data,
+//   revealed,
+//   isDarkMode,
+// }) => {
+//   const canSeeVote =
+//     revealed || (data.currentUserId && data.userId === data.currentUserId);
+
+//   const CardComponent = React.useMemo(() => {
+//     if (data.vote === null) return B1;
+//     const mapping = CARD_MAPPING[data.vote];
+//     if (!mapping) return J2;
+//     return (
+//       getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1
+//     );
+//   }, [data.vote]);
+
+//   return (
+//     <motion.div
+//       initial={{ opacity: 0, y: 10 }}
+//       animate={{ opacity: 1, y: 0 }}
+//       transition={{ duration: 0.3 }}
+//       className={`
+//         flex items-center justify-between p-3
+//         ${
+//           isDarkMode
+//             ? "bg-gray-700/50 hover:bg-gray-700/70"
+//             : "bg-gray-100 hover:bg-gray-200"
+//         }
+//         transition-colors duration-200 group relative
+//       `}
+//     >
+//       {data.isOwner && (
+//         <CrownIcon
+//           size={16}
+//           className={`absolute top-1 left-1 ${
+//             isDarkMode ? "text-yellow-400" : "text-yellow-500"
+//           } opacity-70`}
+//         />
+//       )}
+
+//       <div className="flex-grow flex items-center space-x-3">
+//         <div className="w-8 flex justify-center">
+//           {data.vote === null ? (
+//             <CircleIcon
+//               size={20}
+//               className={isDarkMode ? "text-gray-500" : "text-gray-400"}
+//             />
+//           ) : canSeeVote ? (
+//             <CheckCircle2Icon
+//               size={20}
+//               className={isDarkMode ? "text-green-400" : "text-green-600"}
+//             />
+//           ) : (
+//             <ClockIcon
+//               size={20}
+//               className={`${
+//                 isDarkMode ? "text-blue-400" : "text-blue-600"
+//               } animate-pulse`}
+//             />
+//           )}
+//         </div>
+
+//         <div>
+//           <div
+//             className={`font-medium flex items-center ${
+//               isDarkMode ? "text-white" : "text-gray-800"
+//             }`}
+//           >
+//             {name}
+//           </div>
+//           <div
+//             className={`text-xs ${
+//               isDarkMode ? "text-gray-400" : "text-gray-500"
+//             }`}
+//           >
+//             Joined {getTimeSinceJoined(data.joinedAt)}
+//           </div>
+//         </div>
+//       </div>
+
+//       <div
+//         className={`w-14 h-18 overflow-hidden ${
+//           revealed && data.vote === null ? "opacity-30" : ""
+//         } transition-opacity duration-300`}
+//       >
+//         {canSeeVote ? (
+//           <div className="w-full h-full">
+//             <CardComponent style={{ width: "100%", height: "100%" }} />
+//           </div>
+//         ) : (
+//           <div className="w-full h-full">
+//             <B2 style={{ width: "100%", height: "100%" }} />
+//           </div>
+//         )}
+//       </div>
+//     </motion.div>
+//   );
+// };
+
 export const PlayerCard: React.FC<PlayerCardProps> = ({
   name,
   data,
   revealed,
   isDarkMode,
+  roomId // Add roomId to props
 }) => {
-  const canSeeVote =
-    revealed || (data.currentUserId && data.userId === data.currentUserId);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState(name);
+  const isCurrentUser = data.currentUserId && data.userId === data.currentUserId;
+  const canSeeVote = revealed || isCurrentUser;
 
   const CardComponent = React.useMemo(() => {
     if (data.vote === null) return B1;
     const mapping = CARD_MAPPING[data.vote];
     if (!mapping) return J2;
-    return (
-      getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1
-    );
+    return getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1;
   }, [data.vote]);
+
+  const handleNameChange = async () => {
+    if (!newName.trim() || !isCurrentUser || newName === name) {
+      setIsEditing(false);
+      setNewName(name);
+      return;
+    }
+
+    try {
+      // Update the name in localStorage
+      localStorage.setItem('userName', newName);
+
+      // Update the name in Firestore
+      const roomRef = doc(db, 'planningPoker', roomId);
+      const playerData = {
+        ...data,
+        name: newName
+      };
+
+      // Remove old name entry and add new name entry
+      await updateDoc(roomRef, {
+        [`players.${name}`]: null,
+        [`players.${newName}`]: playerData
+      });
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating name:', error);
+      // Reset to original name on error
+      setNewName(name);
+      setIsEditing(false);
+    }
+  };
 
   return (
     <motion.div
@@ -292,16 +514,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       transition={{ duration: 0.3 }}
       className={`
         flex items-center justify-between p-3
-        ${
-          isDarkMode
-            ? "bg-gray-700/50 hover:bg-gray-700/70"
-            : "bg-gray-100 hover:bg-gray-200"
-        }
+        ${isDarkMode ? "bg-gray-700/50 hover:bg-gray-700/70" : "bg-gray-100 hover:bg-gray-200"}
         transition-colors duration-200 group relative
       `}
     >
       {data.isOwner && (
-        <CrownIcon
+        <Crown
           size={16}
           className={`absolute top-1 left-1 ${
             isDarkMode ? "text-yellow-400" : "text-yellow-500"
@@ -312,49 +530,76 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       <div className="flex-grow flex items-center space-x-3">
         <div className="w-8 flex justify-center">
           {data.vote === null ? (
-            <CircleIcon
+            <Circle
               size={20}
               className={isDarkMode ? "text-gray-500" : "text-gray-400"}
             />
-          ) : canSeeVote ? (
-            <CheckCircle2Icon
+          ) : (
+            <CheckCircle2
               size={20}
               className={isDarkMode ? "text-green-400" : "text-green-600"}
-            />
-          ) : (
-            <ClockIcon
-              size={20}
-              className={`${
-                isDarkMode ? "text-blue-400" : "text-blue-600"
-              } animate-pulse`}
             />
           )}
         </div>
 
-        <div>
-          <div
-            className={`font-medium flex items-center ${
-              isDarkMode ? "text-white" : "text-gray-800"
-            }`}
-          >
-            {name}
+        <div className="flex-grow">
+          <div className={`font-medium flex items-center ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+            {isEditing ? (
+              <div className="flex items-center space-x-2 w-full">
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className={`
+                    px-2 py-1 rounded text-sm w-full
+                    ${isDarkMode ? 'bg-gray-600 text-white' : 'bg-white text-gray-800'}
+                    border ${isDarkMode ? 'border-gray-500' : 'border-gray-300'}
+                    focus:outline-none focus:ring-2 focus:ring-blue-500
+                  `}
+                  maxLength={20}
+                  autoFocus
+                />
+                <button
+                  onClick={handleNameChange}
+                  className={`p-1 rounded-full ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'}`}
+                >
+                  <Check size={16} className="text-green-500" />
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setNewName(name);
+                  }}
+                  className={`p-1 rounded-full ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'}`}
+                >
+                  <X size={16} className="text-red-500" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <span>{isCurrentUser ? 'You' : name}</span>
+                {isCurrentUser && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className={`p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity
+                      ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'}`}
+                  >
+                    <PenSquare size={14} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-          <div
-            className={`text-xs ${
-              isDarkMode ? "text-gray-400" : "text-gray-500"
-            }`}
-          >
+          <div className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
             Joined {getTimeSinceJoined(data.joinedAt)}
           </div>
         </div>
       </div>
 
-      <div
-        className={`w-14 h-18 overflow-hidden ${
-          revealed && data.vote === null ? "opacity-30" : ""
-        } transition-opacity duration-300`}
-      >
-        {canSeeVote ? (
+      <div className={`w-14 h-18 overflow-hidden ${
+        revealed && data.vote === null ? "opacity-30" : ""
+      } transition-opacity duration-300`}>
+        {canSeeVote && data.vote !== null ? (
           <div className="w-full h-full">
             <CardComponent style={{ width: "100%", height: "100%" }} />
           </div>
@@ -367,7 +612,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     </motion.div>
   );
 };
-
 export const VotingStats: React.FC<VotingStatsProps> = ({
   votes,
   revealed,

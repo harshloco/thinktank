@@ -38,4 +38,6 @@ declare module '@letele/playing-cards' {
     export const J2: React.FC<CardProps>;
     export const B1: React.FC<CardProps>;
     export const B2: React.FC<CardProps>;
+    export const H10: React.FC<CardProps>;
+    export const C10: React.FC<CardProps>;
 }
