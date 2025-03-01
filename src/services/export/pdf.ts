@@ -29,7 +29,7 @@ export const exportToPdf = async (board: Board): Promise<void> => {
   let yPos = 55;
   
   // Loop through each section
-  board.sections.forEach((section, index) => {
+  board.sections.forEach((section) => {
     // Check if we need a new page (leaving a 20pt margin at bottom)
     if (yPos > doc.internal.pageSize.getHeight() - 20) {
       doc.addPage();
