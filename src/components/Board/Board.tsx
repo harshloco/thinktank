@@ -21,6 +21,7 @@ import { Tooltip } from "../UI/Tooltip";
 import confetti from "canvas-confetti";
 import Section from "./Section";
 import { useDarkMode } from '../../context/DarkModeContext';
+import ExportButton from "./ExportButton";
 
 const Board: React.FC = () => {
   const { boardId } = useParams<{ boardId: string }>();
@@ -28,6 +29,8 @@ const Board: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+
 
   useEffect(() => {
     setUserId(getCurrentUserId());
@@ -38,10 +41,14 @@ const Board: React.FC = () => {
 
     const unsubscribe = subscribeToBoard(boardId, (boardData) => {
       setBoard(boardData);
+      // Check if current user is the board owner
+      if (boardData && userId) {
+        setIsOwner(boardData.creatorId === userId);
+      }
     });
 
     return () => unsubscribe();
-  }, [boardId]);
+  }, [boardId, userId]);
 
   const triggerConfetti = () => {
     confetti({
@@ -105,7 +112,6 @@ const Board: React.FC = () => {
   ) => {
     if (!boardId || !userId) return;
     await updateSection(boardId, sectionId, userId, { title: newTitle });
-    // setEditingSectionId(null);
   };
 
   const handleToggleBoardVisibility = async () => {
@@ -130,21 +136,24 @@ const Board: React.FC = () => {
             <nav className="flex items-center mb-2 text-sm font-medium">
               <Link
                 to="/boards"
-                className={`flex items-center hover:text-indigo-600 transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                className={`flex items-center hover:text-indigo-500 transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
               >
                 <HomeIcon size={16} className="mr-2" />
                 Home
               </Link>
               <ChevronRightIcon size={16} className="mx-2" />
-              <span className={isDarkMode ? 'text-gray-100' : 'text-gray-900'}>{board.title}</span>
+              <span className={isDarkMode ? 'text-indigo-300' : 'text-indigo-700'}>{board.title}</span>
             </nav>
-            <h1 className="text-4xl font-bold">{board.title}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className={`text-4xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{board.title}</h1>
+              {isOwner && <ExportButton board={board} isOwner={isOwner} />}
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             {/* Dark Mode Toggle */}
             <button
                onClick={toggleDarkMode}
-              className={`p-2 rounded-full ${isDarkMode ? 'bg-gray-700 text-yellow-400' : 'bg-gray-200 text-gray-700'}`}
+              className={`p-2 rounded-full transition-colors ${isDarkMode ? 'bg-indigo-700 text-indigo-200' : 'bg-indigo-100 text-indigo-700'}`}
             >
               {isDarkMode ? <SunIcon size={20} /> : <MoonIcon size={20} />}
             </button>
@@ -158,7 +167,7 @@ const Board: React.FC = () => {
                     onClick={handleToggleBoardVisibility}
                     className={`
                       p-2 rounded-full
-                      ${isBoardVisible ? (isDarkMode ? "bg-green-700" : "bg-green-500") : (isDarkMode ? "bg-red-700" : "bg-red-500")} 
+                      ${isBoardVisible ? (isDarkMode ? "bg-indigo-700" : "bg-indigo-500") : (isDarkMode ? "bg-indigo-900" : "bg-indigo-700")} 
                       text-white flex items-center justify-center
                       transition-all duration-300 hover:scale-105
                       ${!isBoardVisible ? "animate-pulse" : ""}
@@ -203,11 +212,11 @@ const Board: React.FC = () => {
               border-2 border-dashed
               transition-all duration-300
               ${isDarkMode 
-                ? 'bg-gray-800 border-gray-700 hover:border-gray-600' 
-                : 'bg-white border-gray-200 hover:border-gray-300'
+                ? 'bg-gray-800 border-indigo-800 hover:border-indigo-600' 
+                : 'bg-white border-indigo-200 hover:border-indigo-300'
               }`}
             >
-              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-gray-100' : 'text-gray-700'}`}>Add Section</h2>
+              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-indigo-200' : 'text-indigo-700'}`}>Add Section</h2>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
