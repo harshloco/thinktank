@@ -234,10 +234,10 @@ const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
 
   // Memoized derived values
   const playerCount = useMemo(() => Object.keys(players).length, [players]);
-  const currentPlayer = useMemo(() => 
-    storedName ? players[storedName] : null, 
-    [players, storedName]
-  );
+  // const currentPlayer = useMemo(() => 
+  //   storedName ? players[storedName] : null, 
+  //   [players, storedName]
+  // );
     
   const joinSession = useCallback(async (name: string) => {
     if (!name.trim() || !userId || !roomId) return;
@@ -437,7 +437,7 @@ const PlanningPoker: React.FC<{ userId: string }> = ({ userId }) => {
                 points={DEFAULT_STORY_POINTS}
                 selectedPoint={selectedPoint}
                 onSelect={vote}
-                disabled={revealed || currentPlayer?.vote !== null}
+                disabled={revealed }
                 loading={isLoading}
               />
             </div>

@@ -1,3 +1,5 @@
+// src/components/PlanningPoker/PokerCards.tsx
+
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -66,7 +68,6 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../services/firebase/config";
 
 // Types
-
 interface CardType {
   suit: string;
   value: string;
@@ -111,6 +112,7 @@ interface PlayerCardProps {
   roomId:string;
 }
 
+// Modified Card Mapping - Adding "j2" as a valid card value
 const CARD_MAPPING: Record<number | string, CardType | null> = {
   1: { suit: "S", value: "1" },
   2: { suit: "D", value: "2" },
@@ -120,7 +122,8 @@ const CARD_MAPPING: Record<number | string, CardType | null> = {
   10: { suit: "C", value: "10" },
   11: { suit: "S", value: "j" },
   13: { suit: "D", value: "k" },
-  "?": null,
+  // "?": null,
+  // "j2": { suit: "S", value: "j2" }, // Added joker card mapping
 };
 
 const CARD_COMPONENTS: Record<
@@ -137,27 +140,28 @@ const CARD_COMPONENTS: Record<
 const getCardComponent = (
   suit: Suit,
   value: CardValue
-): React.ComponentType | null => CARD_COMPONENTS[suit]?.[value] || null;
-
-const formatCardValue = (point: StoryPoint): string | number => {
-  if (point === null) return "?";
-
-  const STORY_POINT_MAPPING: Record<string | number, string | number> = {
-    1: "a",
-    2: 2,
-    3: 3,
-    5: 5,
-    8: 8,
-    10: 10,
-    11: "j",
-    13: "k",
-    21: "q",
-    34: "k",
-    "?": "j2",
-  };
-
-  return STORY_POINT_MAPPING[point] || point;
+): React.ComponentType | null => {
+ 
+  return CARD_COMPONENTS[suit]?.[value] || null;
 };
+
+// Updated formatter to handle all card values including joker
+// const formatCardValue = (point: StoryPoint): string | number => {
+//   if (point === null) return "?";
+
+//   const STORY_POINT_MAPPING: Record<string | number, string | number> = {
+//     1: "a",
+//     2: 2,
+//     3: 3,
+//     5: 5,
+//     8: 8,
+//     10: 10,
+//     11: "j",
+//     13: "k",
+//   };
+
+//   return STORY_POINT_MAPPING[point] || point;
+// };
 
 const getTimeSinceJoined = (joinedAt: PlayerData["joinedAt"]): string => {
   let timestamp: number;
@@ -191,16 +195,19 @@ const BaseCard: React.FC<CardProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
 
   const CardComponent = React.useMemo(() => {
+    // Fixed handling for joker card
     if (value === "?") return J2;
+    
     const mapping = CARD_MAPPING[value];
     if (!mapping) return B1;
+    
     return (
       getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1
     );
   }, [value]);
 
-   // Simulate loading completion after components are ready
-   useEffect(() => {
+  // Simulate loading completion after components are ready
+  useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 300); // Small delay to ensure smooth transition
@@ -208,10 +215,10 @@ const BaseCard: React.FC<CardProps> = ({
     return () => clearTimeout(timer);
   }, []);
   
-    // Calculate what to show based on loading and reveal state
-    const showCardBack = loading || !isLoaded || !revealed;
+  // Calculate what to show based on loading and reveal state
+  const showCardBack = loading || !isLoaded || !revealed;
   
-     // Disable the 3D flip animation during loading to avoid Safari issues
+  // Disable the 3D flip animation during loading to avoid Safari issues
   const animations = !loading && isLoaded ? {
     initial: { opacity: 0, rotateY: 180 },
     animate: { opacity: 1, rotateY: 0 },
@@ -246,11 +253,6 @@ const BaseCard: React.FC<CardProps> = ({
         {showCardBack ? (
           <div className="w-full h-full">
             <B2 style={{ width: "100%", height: "100%", display: "block" }} />
-            {/* {loading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-md">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            )} */}
           </div>
         ) : (
           <CardComponent style={{ width: "100%", height: "100%", display: "block" }} />
@@ -268,7 +270,6 @@ export const StoryPointCardsGrid: React.FC<{
   loading: boolean;
 }> = ({ points, selectedPoint, onSelect, disabled, loading }) => {
  
-  // Show proper number of loading cards during loading state
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6">
       {points.map((point) => (
@@ -354,113 +355,12 @@ export const StoryPointCardDeck: React.FC<StoryPointCardDeckProps> = ({
   );
 };
 
-// export const PlayerCard: React.FC<PlayerCardProps> = ({
-//   name,
-//   data,
-//   revealed,
-//   isDarkMode,
-// }) => {
-//   const canSeeVote =
-//     revealed || (data.currentUserId && data.userId === data.currentUserId);
-
-//   const CardComponent = React.useMemo(() => {
-//     if (data.vote === null) return B1;
-//     const mapping = CARD_MAPPING[data.vote];
-//     if (!mapping) return J2;
-//     return (
-//       getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1
-//     );
-//   }, [data.vote]);
-
-//   return (
-//     <motion.div
-//       initial={{ opacity: 0, y: 10 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       transition={{ duration: 0.3 }}
-//       className={`
-//         flex items-center justify-between p-3
-//         ${
-//           isDarkMode
-//             ? "bg-gray-700/50 hover:bg-gray-700/70"
-//             : "bg-gray-100 hover:bg-gray-200"
-//         }
-//         transition-colors duration-200 group relative
-//       `}
-//     >
-//       {data.isOwner && (
-//         <CrownIcon
-//           size={16}
-//           className={`absolute top-1 left-1 ${
-//             isDarkMode ? "text-yellow-400" : "text-yellow-500"
-//           } opacity-70`}
-//         />
-//       )}
-
-//       <div className="flex-grow flex items-center space-x-3">
-//         <div className="w-8 flex justify-center">
-//           {data.vote === null ? (
-//             <CircleIcon
-//               size={20}
-//               className={isDarkMode ? "text-gray-500" : "text-gray-400"}
-//             />
-//           ) : canSeeVote ? (
-//             <CheckCircle2Icon
-//               size={20}
-//               className={isDarkMode ? "text-green-400" : "text-green-600"}
-//             />
-//           ) : (
-//             <ClockIcon
-//               size={20}
-//               className={`${
-//                 isDarkMode ? "text-blue-400" : "text-blue-600"
-//               } animate-pulse`}
-//             />
-//           )}
-//         </div>
-
-//         <div>
-//           <div
-//             className={`font-medium flex items-center ${
-//               isDarkMode ? "text-white" : "text-gray-800"
-//             }`}
-//           >
-//             {name}
-//           </div>
-//           <div
-//             className={`text-xs ${
-//               isDarkMode ? "text-gray-400" : "text-gray-500"
-//             }`}
-//           >
-//             Joined {getTimeSinceJoined(data.joinedAt)}
-//           </div>
-//         </div>
-//       </div>
-
-//       <div
-//         className={`w-14 h-18 overflow-hidden ${
-//           revealed && data.vote === null ? "opacity-30" : ""
-//         } transition-opacity duration-300`}
-//       >
-//         {canSeeVote ? (
-//           <div className="w-full h-full">
-//             <CardComponent style={{ width: "100%", height: "100%" }} />
-//           </div>
-//         ) : (
-//           <div className="w-full h-full">
-//             <B2 style={{ width: "100%", height: "100%" }} />
-//           </div>
-//         )}
-//       </div>
-//     </motion.div>
-//   );
-// };
-
 export const PlayerCard: React.FC<PlayerCardProps> = ({
   name,
   data,
   revealed,
   isDarkMode,
-  roomId // Add roomId to props
+  roomId
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(name);
@@ -469,8 +369,13 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
   const CardComponent = React.useMemo(() => {
     if (data.vote === null) return B1;
+    
+    // Fixed handling for joker card
+    if (data.vote === "?") return J2;
+    
     const mapping = CARD_MAPPING[data.vote];
     if (!mapping) return J2;
+    
     return getCardComponent(mapping.suit as Suit, mapping.value as CardValue) || B1;
   }, [data.vote]);
 
@@ -612,6 +517,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     </motion.div>
   );
 };
+
 export const VotingStats: React.FC<VotingStatsProps> = ({
   votes,
   revealed,
@@ -619,21 +525,23 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
  }) => {
   const voteStats = React.useMemo(() => {
     const votedPlayers = Object.values(votes).filter(
-      (player): player is PlayerData & { vote: number } =>
-        player.vote !== null && typeof player.vote === "number"
+      (player): player is PlayerData & { vote: number | string } =>
+        player.vote !== null
     );
  
-    const voteGroups = votedPlayers.reduce<Record<number, string[]>>(
+    const voteGroups = votedPlayers.reduce<Record<string, string[]>>(
       (acc, player) => {
-        acc[player.vote] = [...(acc[player.vote] || []), player.name];
+        const voteKey = String(player.vote);
+        acc[voteKey] = [...(acc[voteKey] || []), player.name];
         return acc;
       },
       {}
     );
  
-    const voteCounts = votedPlayers.reduce<Record<number, number>>(
+    const voteCounts = votedPlayers.reduce<Record<string, number>>(
       (acc, player) => {
-        acc[player.vote] = (acc[player.vote] || 0) + 1;
+        const voteKey = String(player.vote);
+        acc[voteKey] = (acc[voteKey] || 0) + 1;
         return acc;
       },
       {}
@@ -646,13 +554,24 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
  
     return {
       chartData: Object.entries(voteCounts)
-        .map(([value, count]) => ({
-          value: formatCardValue(Number(value)),
-          count,
-          percentage: Math.round((count / totalVoted) * 100),
-          players: voteGroups[Number(value)] || [],
-        }))
-        .sort((a, b) => Number(a.value) - Number(b.value)),
+        .map(([value, count]) => {
+          // Handle both numeric and string votes (like joker)
+          const displayValue = value === "j2" ? "?" : value;
+          
+          return {
+            value: value,
+            displayValue: displayValue,
+            count,
+            percentage: Math.round((count / totalVoted) * 100),
+            players: voteGroups[value] || [],
+          };
+        })
+        .sort((a, b) => {
+          // Sort numeric values normally, with joker at the end
+          if (a.value === "j2") return 1;
+          if (b.value === "j2") return -1;
+          return Number(a.value) - Number(b.value);
+        }),
       consensus: consensus ? { value: consensus[0], count: consensus[1] } : null,
       totalVoters: Object.keys(votes).length,
       totalVotes: totalVoted
@@ -701,7 +620,7 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
           }`}
         >
           <div className="font-medium">
-            Unanimous Decision: {formatCardValue(Number(voteStats.consensus.value))}{" "}
+            Unanimous Decision: {voteStats.consensus.value === "j2" ? "?" : voteStats.consensus.value}{" "}
             points
           </div>
           <div className="text-sm opacity-80">
@@ -732,7 +651,7 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           >
             <XAxis
-              dataKey="value"
+              dataKey="displayValue"
               stroke={isDarkMode ? "#9CA3AF" : "#4B5563"}
             />
             <YAxis stroke={isDarkMode ? "#9CA3AF" : "#4B5563"} />
@@ -742,6 +661,7 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
                 if (active && payload && payload.length) {
                   const data = payload[0].payload as {
                     value: string | number;
+                    displayValue: string | number;
                     count: number;
                     percentage: number;
                     players: string[];
@@ -755,7 +675,7 @@ export const VotingStats: React.FC<VotingStatsProps> = ({
                       }`}
                     >
                       <div className="font-medium mb-1">
-                        {data.value} points
+                        {data.displayValue} points
                       </div>
                       <div className="text-sm mb-2">
                         {data.count} votes ({data.percentage}%)

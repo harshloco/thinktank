@@ -5,7 +5,7 @@ export type Suit = 'H' | 'D' | 'C' | 'S';
 export type CardValue = 'a' | '1' | '2' | '3' | '5' | '8' | '10' | 'j' | 'q' | 'k';
 export type SuitType = "spades" | "hearts" | "diamonds" | "clubs";
 
-export const DEFAULT_STORY_POINTS: StoryPoint[] = [1, 2, 3, 5, 8, 10, 11, 13, "?"];
+export const DEFAULT_STORY_POINTS: StoryPoint[] = [1, 2, 3, 5, 8, 10, 11, 13];
   export interface PlanningPokerRoom {
     id: string;
     createdAt: Timestamp;
