@@ -100,7 +100,7 @@ export default function ExportButton({ board, isOwner }: ExportButtonProps) {
       </button>
 
       {showOptions && (
-        <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg z-10 border ${
+        <div className={`absolute left-20 right-0 mt-2 w-48 rounded-md shadow-lg z-10 border ${
           isDarkMode 
             ? 'bg-gray-800 border-gray-700' 
             : 'bg-white border-gray-200'

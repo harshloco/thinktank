@@ -129,7 +129,7 @@ const Board: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'} transition-colors duration-300`}>
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="mx-auto p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>

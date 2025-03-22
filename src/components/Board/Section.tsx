@@ -18,6 +18,8 @@ interface SectionProps {
   isCreator: boolean;
   isBoardVisible: boolean;
   onUpdateTitle: (sectionId: string, newTitle: string) => Promise<void>;
+  onMove?: (sectionId: string, position: { x: number, y: number }) => Promise<void>;
+  canvasZoom?: number;
 }
 
 export default function Section({
@@ -104,7 +106,7 @@ export default function Section({
 
   return (
     <div
-      className={`rounded-xl shadow-lg p-6 transition-all duration-300 ${
+      className={`rounded-xl shadow-lg p-6 transition-all duration-300 w-full ${
         isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
       }`}
     >
@@ -173,16 +175,17 @@ export default function Section({
       </div>
 
       <div>
-        {/* Notes List */}
-        <div className="space-y-4 mb-4">
+        {/* Notes List - Using grid for responsive layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 w-ful">
           <AnimatePresence>
-            {section.notes.map((note) =>
+            {section.notes?.map((note) =>
               editingNoteId === note.id ? (
                 <motion.div
                   key={note.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
+                  layout
                 >
                   <textarea
                     ref={(input) => {
@@ -239,25 +242,33 @@ export default function Section({
                   />
                 </motion.div>
               ) : (
-                <Note
+                <motion.div
                   key={note.id}
-                  note={note}
-                  boardId={boardId}
-                  sectionId={section.id}
-                  userId={userId}
-                  isAuthor={note.authorId === userId}
-                  isDark={isDark}
-                  isBoardVisible={isBoardVisible}
-                  onVote={(noteId, voteType) => {
-                    // Prevent editing when voting
-                    handleVote(noteId, voteType);
-                  }}
-                  onDelete={handleDeleteNote}
-                  onNoteClick={() => {
-                    setEditingNoteId(note.id);
-                    setEditNoteContent(note.content);
-                  }}
-                />
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                >
+                  <Note
+                    note={note}
+                    boardId={boardId}
+                    sectionId={section.id}
+                    userId={userId}
+                    isAuthor={note.authorId === userId}
+                    isDark={isDark}
+                    isBoardVisible={isBoardVisible}
+                    onVote={(noteId, voteType) => {
+                      // Prevent editing when voting
+                      handleVote(noteId, voteType);
+                    }}
+                    onDelete={handleDeleteNote}
+                    onNoteClick={() => {
+                      setEditingNoteId(note.id);
+                      setEditNoteContent(note.content);
+                    }}
+                  />
+                </motion.div>
               )
             )}
           </AnimatePresence>
