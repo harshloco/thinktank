@@ -1,0 +1,5 @@
+# Allow all web crawlers to index all content
+User-agent: *
+Allow: /
+# Sitemap location
+Sitemap: https://harshloco.github.io/thinktank/sitemap.xml
