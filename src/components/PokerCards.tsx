@@ -223,7 +223,7 @@ const BaseCard: React.FC<CardProps> = ({
     initial: { opacity: 0, rotateY: 180 },
     animate: { opacity: 1, rotateY: 0 },
     exit: { opacity: 0, rotateY: 180 },
-    transition: { type: "spring", stiffness: 300 }
+    transition: { type: "spring" as const, stiffness: 300 }
   } : {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
