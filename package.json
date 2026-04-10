@@ -24,7 +24,7 @@
     "exceljs": "^4.4.0",
     "firebase": "^12.7.0",
     "framer-motion": "^12.5.0",
-    "jspdf": "^4.0.0",
+    "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.562.0",
     "react": "^19.0.0",
